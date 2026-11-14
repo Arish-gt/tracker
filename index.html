@@ -31,10 +31,10 @@ h1{font-size:1.45rem;font-weight:800;margin:0;letter-spacing:-.03em;line-height:
 .tabs{display:flex;gap:4px;padding:5px;margin-bottom:12px;border-radius:22px}
 .tab{flex:1;border:0;background:transparent;color:var(--mute);border-radius:17px;padding:9px 4px 8px;font:inherit;font-weight:600;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;transition:.25s}
 .tab small{font-weight:500;font-size:.72rem;opacity:.85}
-.tab .av{width:26px;height:26px;margin-bottom:2px;font-size:.8rem}
+.tab .av{width:36px;height:36px;margin-bottom:3px}
 .tab[aria-selected="true"]{background:var(--c);color:#fff;box-shadow:0 10px 22px -10px var(--c);transform:translateY(-1px)}
-.tab[aria-selected="true"] .av{background:rgba(255,255,255,.28)}
-.av{font-style:normal;display:inline-grid;place-items:center;border-radius:50%;background:var(--c);color:#fff;font-weight:800;line-height:1}
+.tab[aria-selected="true"] .av{border-color:#fff}
+.av{font-style:normal;display:inline-block;border-radius:50%;background:var(--c) center/cover no-repeat;border:2px solid var(--c);box-shadow:0 4px 10px -4px var(--c)}
 .hero{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;margin-bottom:10px}
 .streakbox{display:flex;align-items:center;gap:12px}
 .fl{font-size:3rem;line-height:1;filter:grayscale(1);opacity:.45}
@@ -76,7 +76,7 @@ h1{font-size:1.45rem;font-weight:800;margin:0;letter-spacing:-.03em;line-height:
 .board{margin-top:12px;padding:16px 18px;border-radius:26px}
 .board h3{margin:0 0 4px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
 .row{display:flex;align-items:center;gap:11px;margin-top:11px;cursor:pointer}
-.row .av{width:30px;height:30px;font-size:.85rem}
+.row .av{width:36px;height:36px}
 .row .t{flex:1;height:9px;border-radius:9px;background:var(--line);overflow:hidden}
 .row .t i{display:block;height:100%;border-radius:9px;background:var(--c);transition:width .6s cubic-bezier(.2,.7,.2,1)}
 .row b{min-width:46px;text-align:right;font-size:.9rem}
@@ -122,6 +122,7 @@ h1{font-size:1.45rem;font-weight:800;margin:0;letter-spacing:-.03em;line-height:
 </div></div>
 <script>
 const NAMES=['Arish','Moiz','Hamza'];
+const AV={Arish:'avatar-arish.jpg',Moiz:'avatar-moiz.jpg',Hamza:'avatar-hamza.jpg'};
 const COLORS={Arish:'#4f46e5',Moiz:'#0e9f8e',Hamza:'#d9892b'};
 const START={y:2026,m:10};
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -172,7 +173,7 @@ function monthInfo(p,y,m){
 function render(){
   $('tabs').innerHTML=NAMES.map(p=>{
     const s=streaks(p);
-    return `<button class="tab" role="tab" aria-selected="${p===S.cur}" data-p="${p}" style="--c:${COLORS[p]}"><i class="av">${p[0]}</i><span>${p}${p===me?' · you':''}</span><small>${shared&&!claimed[p]?'not joined':'🔥 '+s.cur}</small></button>`}).join('');
+    return `<button class="tab" role="tab" aria-selected="${p===S.cur}" data-p="${p}" style="--c:${COLORS[p]}"><i class="av" style="background-image:url(${AV[p]})"></i><span>${p}${p===me?' · you':''}</span><small>${shared&&!claimed[p]?'not joined':'🔥 '+s.cur}</small></button>`}).join('');
   const p=S.cur;document.documentElement.style.setProperty('--acc',COLORS[p]);
   const accbg=COLORS[p]+'22';document.documentElement.style.setProperty('--accbg',accbg);
   const s=streaks(p),mi=monthInfo(p,V.y,V.m);
@@ -197,7 +198,7 @@ function render(){
     h+=`<button class="${cls}" data-k="${k}" ${fut||ro||off?'disabled':''} aria-label="${MN[V.m]} ${d}: ${v===1?'went':v===0?'missed':'not logged'}">${d}<em>${lab}</em></button>`;
   }
   $('grid').innerHTML=h;lastTap=null;
-  $('board').innerHTML='<h3>'+MN[V.m]+' · everyone</h3>'+NAMES.map(n=>{const m=monthInfo(n,V.y,V.m);return `<div class="row" data-p="${n}" style="--c:${COLORS[n]}"><i class="av">${n[0]}</i><div class="t"><i style="width:${m.n?m.went/m.n*100:0}%"></i></div><b>${m.went}/${m.n}</b></div>`}).join('');
+  $('board').innerHTML='<h3>'+MN[V.m]+' · everyone</h3>'+NAMES.map(n=>{const m=monthInfo(n,V.y,V.m);return `<div class="row" data-p="${n}" style="--c:${COLORS[n]}"><i class="av" style="background-image:url(${AV[n]})"></i><div class="t"><i style="width:${m.n?m.went/m.n*100:0}%"></i></div><b>${m.went}/${m.n}</b></div>`}).join('');
 }
 $('board').onclick=e=>{const r=e.target.closest('.row');if(r){S.cur=r.dataset.p;save();render();scrollTo({top:0,behavior:'smooth'})}};
 $('tabs').onclick=e=>{const b=e.target.closest('.tab');if(b){S.cur=b.dataset.p;save();render()}};
