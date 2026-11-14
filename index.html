@@ -199,7 +199,7 @@ function confetti(){
     if(++f<220)requestAnimationFrame(loop);else x.clearRect(0,0,c.width,c.height);
   })();
 }
-const CFG={URL:'https://muebbjbwqxpbbdjfrnzi.supabase.co/rest/v1/',KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11ZWJiamJ3cXhwYmJkamZybnppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ2NTg4ODQsImV4cCI6MjExMDIzNDg4NH0.5CJgrFge6ks5uGgVn-XXB0llX-vwRiErESydwv71HYM'};
+const CFG={URL:'https://muebbjbwqxpbbdjfrnzi.supabase.co',KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11ZWJiamJ3cXhwYmJkamZybnppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ2NTg4ODQsImV4cCI6MjExMDIzNDg4NH0.5CJgrFge6ks5uGgVn-XXB0llX-vwRiErESydwv71HYM'};
 let shared=true,me=null,pin=null,pending=0,focused=false,claimed={Arish:1,Moiz:1,Hamza:1};
 try{const m=JSON.parse(localStorage.getItem('showup-me'));if(m&&NAMES.includes(m.name)){me=m.name;pin=m.pin;S.cur=me;focused=true}}catch(e){}
 const H={apikey:CFG.KEY,Authorization:'Bearer '+CFG.KEY,'Content-Type':'application/json'};
