@@ -42,6 +42,7 @@ h1{font-size:1.7rem;font-weight:800;margin:0;letter-spacing:-.02em}
 .day.missed{background:var(--missbg);border-color:var(--miss);color:var(--miss)}
 .day.today{box-shadow:0 0 0 2.5px var(--ink)}
 .day.future{opacity:.35;cursor:default}
+.day.off{opacity:.5;background:transparent;border-style:dashed;cursor:default}
 .day:disabled:not(.future){cursor:default}
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;color:var(--mute);font-size:.82rem}
 .legend span:before{content:"";display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:6px;vertical-align:-1px;border:1.5px solid var(--line);background:var(--bg)}
@@ -78,8 +79,8 @@ h1{font-size:1.7rem;font-weight:800;margin:0;letter-spacing:-.02em}
     </div>
     <div class="bar"><i id="fill"></i></div>
     <div class="grid" id="grid"></div>
-    <div class="legend"><span class="l1">Went</span><span class="l2">Missed</span><span>Not logged</span></div>
-    <p class="hint">Finish a month with every day marked as went to earn a celebration.</p>
+    <div class="legend"><span class="l1">Went</span><span class="l2">Missed</span><span>Not logged</span><span>Sunday: closed</span></div>
+    <p class="hint">Finish a month with every open day marked as went to earn a celebration. Sundays are closed and don’t count.</p>
   </div>
   <button class="reset" id="reset">Reset all data</button>
 </div>
@@ -110,21 +111,25 @@ const $=id=>document.getElementById(id);
 function streaks(p){
   const D=S.data[p];
   let cur=0,dt=new Date(T.y,T.m,T.d);
-  if(D[todayKey]!==1)dt.setDate(dt.getDate()-1);
-  while(D[key(dt.getFullYear(),dt.getMonth(),dt.getDate())]===1){cur++;dt.setDate(dt.getDate()-1)}
+  if(dt.getDay()!==0&&D[todayKey]!==1)dt.setDate(dt.getDate()-1);
+  for(let i=0;i<4000;i++){
+    if(dt.getDay()!==0){if(D[key(dt.getFullYear(),dt.getMonth(),dt.getDate())]===1)cur++;else break}
+    dt.setDate(dt.getDate()-1);
+  }
   let best=0,run=0;
   const ks=Object.keys(D).filter(k=>D[k]===1).sort();
   if(ks.length){
     let d=new Date(ks[0]+'T00:00:00');const end=new Date(T.y,T.m,T.d);
     for(;d<=end;d.setDate(d.getDate()+1)){
+      if(d.getDay()===0)continue;
       if(D[key(d.getFullYear(),d.getMonth(),d.getDate())]===1){run++;best=Math.max(best,run)}else run=0;
     }
   }
   return{cur,best};
 }
 function monthInfo(p,y,m){
-  const n=dim(y,m);let went=0,missed=0;
-  for(let d=1;d<=n;d++){const v=S.data[p][key(y,m,d)];if(v===1)went++;else if(v===0)missed++}
+  const dn=dim(y,m);let n=0,went=0,missed=0;
+  for(let d=1;d<=dn;d++){if(new Date(y,m,d).getDay()===0)continue;n++;const v=S.data[p][key(y,m,d)];if(v===1)went++;else if(v===0)missed++}
   const ended=idx(y,m)<idx(T.y,T.m);
   return{n,went,missed,ended,perfect:ended&&went===n};
 }
@@ -147,12 +152,12 @@ function render(){
   $('perfect').innerHTML=mi.perfect?`<div class="perfect"><span>🏆 Perfect ${MN[V.m]}! ${p} made it to every single day.</span><button id="cel">Celebrate</button></div>`:'';
   const first=new Date(V.y,V.m,1).getDay();let h=DW.map(d=>`<div class="dow">${d}</div>`).join('');
   for(let i=0;i<first;i++)h+='<div></div>';
-  for(let d=1;d<=mi.n;d++){
+  for(let d=1;d<=dim(V.y,V.m);d++){
     const k=key(V.y,V.m,d),v=S.data[p][k];
-    const fut=k>todayKey,ro=shared&&S.cur!==me;
-    const cls=['day',v===1?'went':v===0?'missed':'',k===todayKey?'today':'',fut?'future':''].join(' ');
-    const lab=v===1?'✓':v===0?'✕':'';
-    h+=`<button class="${cls}" data-k="${k}" ${fut||ro?'disabled':''} aria-label="${MN[V.m]} ${d}: ${v===1?'went':v===0?'missed':'not logged'}">${d}<em>${lab}</em></button>`;
+    const off=new Date(V.y,V.m,d).getDay()===0,fut=k>todayKey,ro=shared&&S.cur!==me;
+    const cls=['day',off?'off':v===1?'went':v===0?'missed':'',k===todayKey?'today':'',fut?'future':''].join(' ');
+    const lab=off?'Off':v===1?'✓':v===0?'✕':'';
+    h+=`<button class="${cls}" data-k="${k}" ${fut||ro||off?'disabled':''} aria-label="${MN[V.m]} ${d}: ${v===1?'went':v===0?'missed':'not logged'}">${d}<em>${lab}</em></button>`;
   }
   $('grid').innerHTML=h;
 }
@@ -181,7 +186,7 @@ function check(){
       if(!S.seen[id]&&monthInfo(p,y,m).perfect){
         S.seen[id]=1;save();
         $('mt').textContent='Perfect '+MN[m]+', '+p+'!';
-        $('mp').textContent=`${p} showed up for all ${dim(y,m)} days of ${MN[m]}. That kind of consistency is rare, and it’s worth being proud of. Thank you for the effort!`;
+        $('mp').textContent=`${p} showed up for all ${monthInfo(p,y,m).n} gym days of ${MN[m]}. That kind of consistency is rare, and it’s worth being proud of. Thank you for the effort!`;
         $('ov').classList.add('on');confetti();return;
       }
       m++;if(m>11){m=0;y++}
