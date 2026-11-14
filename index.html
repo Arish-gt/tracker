@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Show Up Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f7;--card:#fff;--ink:#14213d;--mute:#5d6b82;--line:#dbe3ee;--miss:#e5484d;--missbg:#fdeceb;--ok:#fff;--acc:#4f46e5;--accbg:#ecebfd;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1424;--card:#16203a;--ink:#eaf0fb;--mute:#93a1bd;--line:#273352;--missbg:#3a1d26;--accbg:#232a55;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1424;--card:#16203a;--ink:#eaf0fb;--mute:#93a1bd;--line:#273352;--missbg:#3a1d26;--accbg:#232a55;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.7rem;font-weight:800;margin:0;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:2px 0 18px;font-size:.95rem}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:10px 6px;font:inherit;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab small{font-weight:400;color:var(--mute);font-size:.75rem}
+.tab[aria-selected="true"]{border-color:var(--acc);background:var(--accbg)}
+.tab:focus-visible,.nav:focus-visible,.day:focus-visible,button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:14px;padding:12px;border:1px solid var(--line)}
+.stat b{display:block;font-size:1.7rem;line-height:1.1;font-weight:800}
+.stat span{color:var(--mute);font-size:.8rem}
+.stat.streak b{color:var(--acc)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mhead h2{margin:0;font-size:1.25rem;font-weight:800}
+.nav{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:1.2rem;cursor:pointer}
+.nav:disabled{opacity:.3;cursor:default}
+.bar{height:8px;border-radius:8px;background:var(--line);overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:8px;transition:width .3s}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow{text-align:center;color:var(--mute);font-size:.78rem;font-weight:600;padding-bottom:2px}
+.day{aspect-ratio:1;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;position:relative}
+.day em{font-style:normal;font-size:.7rem;line-height:1;height:.8rem}
+.day.went{background:var(--acc);border-color:var(--acc);color:var(--ok)}
+.day.missed{background:var(--missbg);border-color:var(--miss);color:var(--miss)}
+.day.today{box-shadow:0 0 0 2.5px var(--ink)}
+.day.future{opacity:.35;cursor:default}
+.day:disabled:not(.future){cursor:default}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;color:var(--mute);font-size:.82rem}
+.legend span:before{content:"";display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:6px;vertical-align:-1px;border:1.5px solid var(--line);background:var(--bg)}
+.legend .l1:before{background:var(--acc);border-color:var(--acc)}
+.legend .l2:before{background:var(--missbg);border-color:var(--miss)}
+.hint{color:var(--mute);font-size:.82rem;margin:10px 0 0}
+.perfect{background:var(--accbg);border:2px solid var(--acc);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.perfect button,.modal button{font:inherit;font-weight:600;background:var(--acc);color:#fff;border:0;border-radius:10px;padding:8px 14px;cursor:pointer}
+.reset{margin-top:22px;background:none;border:0;color:var(--mute);font:inherit;font-size:.82rem;text-decoration:underline;cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(10,15,30,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.overlay.on{display:flex}
+.modal{background:var(--card);border-radius:22px;padding:28px 22px;max-width:380px;text-align:center;border:3px solid var(--acc)}
+.modal .big{font-size:3.2rem;line-height:1}
+.modal h3{font-size:1.5rem;margin:8px 0;font-weight:800}
+.modal p{color:var(--mute);margin:0 0 18px}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="overlay" id="pk"><div class="modal" role="dialog" aria-modal="true"><div class="big">👋</div><h3>Who are you?</h3><p>Pick your name and enter your PIN. Only you can log days on your calendar. Everyone else can view it.</p><div id="pkb"></div></div></div>
+<div class="wrap">
+  <h1>Show Up Tracker</h1>
+  <p class="sub">Everyone logs their own days. Everyone can see everyone’s.</p>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <p class="hint" id="who" style="margin:0 0 10px"></p><div id="stats" class="stats"></div>
+  <div id="perfect"></div>
+  <div class="panel">
+    <div class="mhead">
+      <button class="nav" id="prev" aria-label="Previous month">‹</button>
+      <h2 id="mtitle"></h2>
+      <button class="nav" id="next" aria-label="Next month">›</button>
+    </div>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="grid" id="grid"></div>
+    <div class="legend"><span class="l1">Went</span><span class="l2">Missed</span><span>Not logged</span></div>
+    <p class="hint">Finish a month with every day marked as went to earn a celebration.</p>
+  </div>
+  <button class="reset" id="reset">Reset all data</button>
+</div>
+<div class="overlay" id="ov"><div class="modal" role="dialog" aria-modal="true">
+  <div class="big">🏆</div><h3 id="mt"></h3><p id="mp"></p><button id="mc">Keep it going</button>
+</div></div>
+<script>
+const NAMES=['Arish','Moiz','Hamza'];
+const COLORS={Arish:'#4f46e5',Moiz:'#0e9f8e',Hamza:'#d9892b'};
+const START={y:2026,m:10};
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const SK='showup-v1';
+let S;
+try{S=JSON.parse(localStorage.getItem(SK))}catch(e){S=null}
+if(!S||!S.data)S={data:{Arish:{},Moiz:{},Hamza:{}},seen:{},cur:'Arish'};
+const save=()=>{try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}};
+const now=new Date();
+const T={y:now.getFullYear(),m:now.getMonth(),d:now.getDate()};
+let V={y:Math.max(T.y*12+T.m,START.y*12+START.m)};V={y:Math.floor(V.y/12),m:V.y%12};
+const pad=n=>String(n).padStart(2,'0');
+const key=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
+const dim=(y,m)=>new Date(y,m+1,0).getDate();
+const idx=(y,m)=>y*12+m;
+const todayKey=key(T.y,T.m,T.d);
+const $=id=>document.getElementById(id);
+
+function streaks(p){
+  const D=S.data[p];
+  let cur=0,dt=new Date(T.y,T.m,T.d);
+  if(D[todayKey]!==1)dt.setDate(dt.getDate()-1);
+  while(D[key(dt.getFullYear(),dt.getMonth(),dt.getDate())]===1){cur++;dt.setDate(dt.getDate()-1)}
+  let best=0,run=0;
+  const ks=Object.keys(D).filter(k=>D[k]===1).sort();
+  if(ks.length){
+    let d=new Date(ks[0]+'T00:00:00');const end=new Date(T.y,T.m,T.d);
+    for(;d<=end;d.setDate(d.getDate()+1)){
+      if(D[key(d.getFullYear(),d.getMonth(),d.getDate())]===1){run++;best=Math.max(best,run)}else run=0;
+    }
+  }
+  return{cur,best};
+}
+function monthInfo(p,y,m){
+  const n=dim(y,m);let went=0,missed=0;
+  for(let d=1;d<=n;d++){const v=S.data[p][key(y,m,d)];if(v===1)went++;else if(v===0)missed++}
+  const ended=idx(y,m)<idx(T.y,T.m);
+  return{n,went,missed,ended,perfect:ended&&went===n};
+}
+function render(){
+  $('tabs').innerHTML=NAMES.map(p=>{
+    const s=streaks(p);
+    return `<button class="tab" role="tab" aria-selected="${p===S.cur}" data-p="${p}" style="${p===S.cur?'--acc:'+COLORS[p]+';border-color:'+COLORS[p]:''}">${p}${p===me?' (you)':''}<small>${shared&&!claimed[p]?'not joined':'🔥 '+s.cur}</small></button>`}).join('');
+  const p=S.cur;document.documentElement.style.setProperty('--acc',COLORS[p]);
+  const accbg=COLORS[p]+'22';document.documentElement.style.setProperty('--accbg',accbg);
+  const s=streaks(p),mi=monthInfo(p,V.y,V.m);
+  $('who').textContent=!shared?'Tap a day to log it: went, missed, or cleared.':!me?'':p===me?'Your calendar. Tap a day to log it: went, missed, or cleared.':'Viewing '+p+'’s calendar. View only.';
+  $('reset').textContent=shared?'Not you? Switch person':'Reset all data';
+  $('reset').style.display=shared&&!me?'none':'';
+  renderPick();
+  $('stats').innerHTML=`<div class="stat streak"><b>${s.cur}${s.cur?' 🔥':''}</b><span>Current streak</span></div><div class="stat"><b>${s.best}</b><span>Best streak</span></div><div class="stat"><b>${mi.went}/${mi.n}</b><span>Days this month</span></div>`;
+  $('mtitle').textContent=MN[V.m]+' '+V.y;
+  $('prev').disabled=idx(V.y,V.m)<=idx(START.y,START.m);
+  $('next').disabled=idx(V.y,V.m)>=idx(T.y,T.m);
+  $('fill').style.width=(mi.went/mi.n*100)+'%';
+  $('perfect').innerHTML=mi.perfect?`<div class="perfect"><span>🏆 Perfect ${MN[V.m]}! ${p} made it to every single day.</span><button id="cel">Celebrate</button></div>`:'';
+  const first=new Date(V.y,V.m,1).getDay();let h=DW.map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<first;i++)h+='<div></div>';
+  for(let d=1;d<=mi.n;d++){
+    const k=key(V.y,V.m,d),v=S.data[p][k];
+    const fut=k>todayKey,ro=shared&&S.cur!==me;
+    const cls=['day',v===1?'went':v===0?'missed':'',k===todayKey?'today':'',fut?'future':''].join(' ');
+    const lab=v===1?'✓':v===0?'✕':'';
+    h+=`<button class="${cls}" data-k="${k}" ${fut||ro?'disabled':''} aria-label="${MN[V.m]} ${d}: ${v===1?'went':v===0?'missed':'not logged'}">${d}<em>${lab}</em></button>`;
+  }
+  $('grid').innerHTML=h;
+}
+$('tabs').onclick=e=>{const b=e.target.closest('.tab');if(b){S.cur=b.dataset.p;save();render()}};
+$('grid').onclick=e=>{
+  const b=e.target.closest('.day');if(!b||b.disabled)return;
+  if(shared&&S.cur!==me)return;
+  const D={...S.data[S.cur]},k=b.dataset.k,v=D[k];
+  if(v===undefined)D[k]=1;else if(v===1)D[k]=0;else delete D[k];
+  S.data[S.cur]=D;
+  if(shared)push(D);
+  save();render();check();
+};
+$('prev').onclick=()=>{V.m--;if(V.m<0){V.m=11;V.y--}render()};
+$('next').onclick=()=>{V.m++;if(V.m>11){V.m=0;V.y++}render()};
+$('perfect').onclick=e=>{if(e.target.id==='cel')confetti()};
+$('mc').onclick=()=>{$('ov').classList.remove('on');check()};
+
+let queue=[];
+function check(){
+  if($('ov').classList.contains('on'))return;
+  for(const p of NAMES){
+    let y=START.y,m=START.m;
+    while(idx(y,m)<idx(T.y,T.m)){
+      const id=p+'-'+y+'-'+m;
+      if(!S.seen[id]&&monthInfo(p,y,m).perfect){
+        S.seen[id]=1;save();
+        $('mt').textContent='Perfect '+MN[m]+', '+p+'!';
+        $('mp').textContent=`${p} showed up for all ${dim(y,m)} days of ${MN[m]}. That kind of consistency is rare, and it’s worth being proud of. Thank you for the effort!`;
+        $('ov').classList.add('on');confetti();return;
+      }
+      m++;if(m>11){m=0;y++}
+    }
+  }
+}
+function confetti(){
+  const c=$('fx'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+  const cols=['#4f46e5','#0e9f8e','#d9892b','#e5484d','#f5c542'];
+  const P=Array.from({length:160},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,r:4+Math.random()*5,vx:-1.5+Math.random()*3,vy:2+Math.random()*4,c:cols[Math.random()*5|0],a:Math.random()*6}));
+  let f=0;
+  (function loop(){
+    x.clearRect(0,0,c.width,c.height);
+    P.forEach(q=>{q.x+=q.vx;q.y+=q.vy;q.a+=.1;x.save();x.translate(q.x,q.y);x.rotate(q.a);x.fillStyle=q.c;x.fillRect(-q.r,-q.r/2,q.r*2,q.r);x.restore()});
+    if(++f<220)requestAnimationFrame(loop);else x.clearRect(0,0,c.width,c.height);
+  })();
+}
+const CFG={URL:'https://muebbjbwqxpbbdjfrnzi.supabase.co/rest/v1/',KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11ZWJiamJ3cXhwYmJkamZybnppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ2NTg4ODQsImV4cCI6MjExMDIzNDg4NH0.5CJgrFge6ks5uGgVn-XXB0llX-vwRiErESydwv71HYM'};
+let shared=true,me=null,pin=null,pending=0,focused=false,claimed={Arish:1,Moiz:1,Hamza:1};
+try{const m=JSON.parse(localStorage.getItem('showup-me'));if(m&&NAMES.includes(m.name)){me=m.name;pin=m.pin;S.cur=me;focused=true}}catch(e){}
+const H={apikey:CFG.KEY,Authorization:'Bearer '+CFG.KEY,'Content-Type':'application/json'};
+function renderPick(){
+  const show=!me;
+  $('pk').classList.toggle('on',show);
+  if(show)$('pkb').innerHTML=NAMES.map(n=>`<button data-n="${n}" style="background:${COLORS[n]};margin:4px">${n}</button>`).join('');
+}
+async function load(){
+  try{
+    const r=await fetch(CFG.URL+'/rest/v1/checkins?select=name,days',{headers:H});
+    if(!r.ok)throw 0;
+    (await r.json()).forEach(x=>{if(NAMES.includes(x.name)&&!(x.name===me&&pending))S.data[x.name]=x.days||{}});
+    render();check();
+  }catch(e){$('who').textContent='Can\u2019t reach the database. Check the Supabase settings in the code.'}
+}
+async function push(D){
+  pending++;
+  try{
+    const r=await fetch(CFG.URL+'/rest/v1/rpc/save_days',{method:'POST',headers:H,body:JSON.stringify({p_name:me,p_pin:pin,p_days:D})});
+    if(!r.ok){
+      const t=await r.text();
+      if(/wrong pin/.test(t)){me=null;pin=null;try{localStorage.removeItem('showup-me')}catch(e){}alert('Wrong PIN.')}
+      else alert('Could not save. Check your connection.');
+    }
+    return r.ok;
+  }catch(e){alert('Could not save. Check your connection.');return false}
+  finally{pending--;render()}
+}
+$('pkb').onclick=e=>{
+  const b=e.target.closest('button[data-n]');if(!b)return;
+  const n=b.dataset.n,p=prompt('Enter your PIN for '+n);if(!p)return;
+  me=n;pin=p;
+  push(S.data[n]||{}).then(ok=>{if(ok){try{localStorage.setItem('showup-me',JSON.stringify({name:n,pin:p}))}catch(e){}S.cur=n;focused=true;save();load()}});
+};
+$('reset').onclick=()=>{if(me&&confirm('Switch to a different person on this device?')){me=null;pin=null;try{localStorage.removeItem('showup-me')}catch(e){}render()}};
+load();setInterval(load,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+render();check();
+</script>
+</body>
+</html>
